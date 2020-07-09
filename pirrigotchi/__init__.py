@@ -97,7 +97,7 @@ class Pirrigotchi():
 	
 	def chartsensor(self, sensor, value):
 		c = self.db.cursor()
-		query = f'''SELECT MIN(timestamp), MAX(timestamp), MIN({value}), MAX({value}), AVG({value})
+		query = f'''SELECT MIN(datetime(timestamp, 'localtime')), MAX(datetime(timestamp, 'localtime')), MIN({value}), MAX({value}), AVG({value})
 			FROM data
                         WHERE timestamp >= datetime('now', '-1 days')
 			GROUP BY strftime('%s', timestamp) / (60 * 30)
