@@ -1,14 +1,17 @@
-import inky
-from PIL import Image, ImageFont, ImageDraw
-from font_hanken_grotesk import HankenGrotesk
-from math import sin
-from random import uniform, random
-import sqlite3
-from pathlib import Path
 import os
-import geocoder
+import sqlite3
+from math import sin
+from pathlib import Path
+from random import random, uniform
+
 import requests
+from PIL import Image, ImageDraw, ImageFont
+
+import geocoder
+import inky
 from bs4 import BeautifulSoup
+from font_hanken_grotesk import HankenGrotesk
+
 
 class Weather():
 	def __init__(self, address):
