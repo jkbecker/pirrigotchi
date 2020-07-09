@@ -54,56 +54,56 @@ class Weather():
 #            break
 
 class Pirrigotchi():
-	def __init__(self):
-		self.db = PirriDB()
-		self._inkyphat = inky.InkyPHAT('black')
-		self._img = Image.new('P', (self._inkyphat.HEIGHT, self._inkyphat.WIDTH))
-		self._draw = ImageDraw.Draw(self._img)
-		self.pollsensor()
-		self.chartsensor('sensor1', 'airtemp')
-		font = ImageFont.truetype(HankenGrotesk, 14)
-		message = "Hello, World!"
-		h, w = font.getsize(message)
-		x = (self._inkyphat.WIDTH / 2) - (w / 2)
-		y = (self._inkyphat.HEIGHT / 2) - (h / 2)
-		self._draw.text((y,x), message, self._inkyphat.BLACK, font)
-		oldmin = 0
-		oldmax = 0
-		oldpoint = 0
-		for i in range(48):
-			point = 0.5*(oldpoint + sin(.1*i)+uniform(-.2,.2))
-			min = 0.5*(oldmin + point-uniform(0,1))
-			max = 0.5*(oldmax + point+uniform(0,1))
-			scale=10
-			self._draw.line((i, 40-scale*min, i, 40-scale*max), self._inkyphat.RED, 1)
-			self._draw.point((i, 40-scale*point), self._inkyphat.BLACK)
-			oldmin = min
-			oldmax = max
-			oldpoint = point
-		self._inkyphat.set_image(self._img.rotate(90, Image.NEAREST, expand=1))
-                chart = self.sensorchart('sensor1', 'airtemp')
-                self._img.paste(chart.image, (10, 50))
-		self._inkyphat.set_border(self._inkyphat.BLACK)
-		self._inkyphat.show()
+    def __init__(self):
+        self.db = PirriDB()
+        self._inkyphat = inky.InkyPHAT('black')
+        self._img = Image.new('P', (self._inkyphat.HEIGHT, self._inkyphat.WIDTH))
+        self._draw = ImageDraw.Draw(self._img)
+        self.pollsensor()
+        self.chartsensor('sensor1', 'airtemp')
+        font = ImageFont.truetype(HankenGrotesk, 14)
+        message = "Hello, World!"
+        h, w = font.getsize(message)
+        x = (self._inkyphat.WIDTH / 2) - (w / 2)
+        y = (self._inkyphat.HEIGHT / 2) - (h / 2)
+        self._draw.text((y,x), message, self._inkyphat.BLACK, font)
+        oldmin = 0
+        oldmax = 0
+        oldpoint = 0
+        for i in range(48):
+            point = 0.5*(oldpoint + sin(.1*i)+uniform(-.2,.2))
+            min = 0.5*(oldmin + point-uniform(0,1))
+            max = 0.5*(oldmax + point+uniform(0,1))
+            scale=10
+            self._draw.line((i, 40-scale*min, i, 40-scale*max), self._inkyphat.RED, 1)
+            self._draw.point((i, 40-scale*point), self._inkyphat.BLACK)
+            oldmin = min
+            oldmax = max
+            oldpoint = point
+        self._inkyphat.set_image(self._img.rotate(90, Image.NEAREST, expand=1))
+        chart = self.sensorchart('sensor1', 'airtemp')
+        self._img.paste(chart.image, (10, 50))
+        self._inkyphat.set_border(self._inkyphat.BLACK)
+        self._inkyphat.show()
 
-	def pollsensor(self):
-		w = Weather('Allston, MA')
-		airtemp = w.temp
-		soiltemp = 0
-		soilhum = 0
-		lum = 0
-		self.logsensor('sensor1', airtemp=airtemp, soiltemp=soiltemp, soilhum=soilhum, lum=lum)
+    def pollsensor(self):
+        w = Weather('Allston, MA')
+        airtemp = w.temp
+        soiltemp = 0
+        soilhum = 0
+        lum = 0
+        self.logsensor('sensor1', airtemp=airtemp, soiltemp=soiltemp, soilhum=soilhum, lum=lum)
 
-	def logsensor(self, sensor, airtemp=0, soiltemp=0, soilhum=0, lum=0):
-		c = self.db.cursor()
-		c.execute('INSERT INTO data (soiltemp, soilhum, lum, airtemp, sensor) VALUES (?, ?, ?, ?, ?)', 
-				(soiltemp, soilhum, lum, airtemp, sensor))
-		self.db.commit()
-	
-	def chartsensor(self, sensor, value):
-		c = self.db.cursor()
-		query = f'''SELECT MIN(datetime(timestamp, 'localtime')), MAX(datetime(timestamp, 'localtime')), MIN({value}), MAX({value}), AVG({value})
-			FROM data
+    def logsensor(self, sensor, airtemp=0, soiltemp=0, soilhum=0, lum=0):
+        c = self.db.cursor()
+        c.execute('INSERT INTO data (soiltemp, soilhum, lum, airtemp, sensor) VALUES (?, ?, ?, ?, ?)', 
+                (soiltemp, soilhum, lum, airtemp, sensor))
+        self.db.commit()
+    
+    def chartsensor(self, sensor, value):
+        c = self.db.cursor()
+        query = f'''SELECT MIN(datetime(timestamp, 'localtime')), MAX(datetime(timestamp, 'localtime')), MIN({value}), MAX({value}), AVG({value})
+            FROM data
                         WHERE timestamp >= datetime('now', '-1 days')
             GROUP BY strftime('%s', timestamp) / (60 * 30)
             '''
