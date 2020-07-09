@@ -60,7 +60,6 @@ class Pirrigotchi():
         self._img = Image.new('P', (self._inkyphat.HEIGHT, self._inkyphat.WIDTH))
         self._draw = ImageDraw.Draw(self._img)
         self.pollsensor()
-        self.chartsensor('sensor1', 'airtemp')
         font = ImageFont.truetype(HankenGrotesk, 14)
         message = "Hello, World!"
         h, w = font.getsize(message)
@@ -81,6 +80,8 @@ class Pirrigotchi():
             oldmax = max
             oldpoint = point
         self._inkyphat.set_image(self._img.rotate(90, Image.NEAREST, expand=1))
+        chart = self.sensorchart('sensor1', 'airtemp')
+        self._img.paste(chart.image, (10, 50))
         self._inkyphat.set_border(self._inkyphat.BLACK)
         self._inkyphat.show()
 
@@ -98,7 +99,7 @@ class Pirrigotchi():
                 (soiltemp, soilhum, lum, airtemp, sensor))
         self.db.commit()
     
-    def chartsensor(self, sensor, value):
+    def sensorchart(self, sensor, value):
         c = self.db.cursor()
         query = f'''SELECT MIN(timestamp), MAX(timestamp), MIN({value}), MAX({value}), AVG({value})
             FROM data
@@ -106,8 +107,34 @@ class Pirrigotchi():
             GROUP BY strftime('%s', timestamp) / (60 * 30)
             '''
         print(query)
-        for row in c.execute(query):
+        result = c.execute(query)
+        for row in result:
             print(row)
+        chart = SensorChart(48, 20, result)
+        return chart
+
+class SensorChart:
+    def __init__(self, width, height, data):
+        self.width = width
+        self.height = height
+        self._img = Image.new('P', (width, height))
+        self._draw = ImageDraw.Draw(self._img)
+        self.mindata = 0
+        self.maxdata = 0
+        self.lowerbound = 0
+        self.upperbound = 0
+        self.scale = 1
+
+    @property
+    def image(self):
+        return self._img
+
+    def border(self, color):
+        self._draw.line((0,0,0,self.height), color, 1)
+        self._draw.line((0,0,self.width,0), color, 1)
+        self._draw.line((self.width,self.height,0,self.height), color, 1)
+        self._draw.line((self.width,self.height,self.width,0), color, 1)
+
 
 class PirriDB():
     def __init__(self):
